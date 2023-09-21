@@ -53,8 +53,14 @@ class User:
         self.forecast = requests.get(self.gridpoint['properties']['forecast']).json()
     
     def print_info(self):
-        pp.pprint(self.gridpoint['properties']['forecast'])
-        pp.pprint(self.forecast)
+        # pp.pprint(self.gridpoint['properties']['forecast'])
+        # pp.pprint(self.forecast)
+        print("test")
+
+    def check_occurrence(self):
+        for period in self.forecast['properties']['periods']:
+            print(period['name'])
+            print(period['temperature'])
 
 def main():
     # forcast_out = requests.get("http://dev.virtualearth.net/REST/v1/Locations?&postalCode={92109}&key={}")
@@ -68,7 +74,8 @@ def main():
     test_user.get_coords(api_key=location_api_key)
     test_user.get_gridpoint_url()
     test_user.get_forecast()
-    test_user.print_info()
+    # test_user.print_info()
+    test_user.check_occurrence()
     print("+++++++++++")
     print("located")
 
