@@ -67,7 +67,7 @@ class User:
     def get_forecast(self):
         self.forecast = requests.get(self.gridpoint['properties']['forecast']).json()
 
-    def add_notification(self, type, value):
+    def add_notification(self, type, value, lead_time):
         self.notifications[type] = value
     
     def print_info(self):
@@ -100,7 +100,7 @@ def main():
     test_user.get_gridpoint_url()
     test_user.get_forecast()
     # test_user.print_info()
-    test_user.add_notification(type="precipitation", value=20)
+    test_user.add_notification(type="precipitation", value=20, lead_time=[3,2,1,0])
     test_user.check_occurrence()
     print("+++++++++++")
     print("located")
