@@ -8,10 +8,25 @@ import config
 #Bing location API:
 location_api_key = config.location_api_key
 
+# weather_keys = {'probabilityOfPrecipitation' : 'precipitation', 
+#                 'temperature' : 'temperature', 
+#                 'dewpoint' : 'dewpoint', 
+#                 'relativeHumidity' : 'humidity', 
+#                 'windSpeed' : 'wind_speed', 
+#                 'windDirection' : 'wind_direction'}
+
+weather_keys = {'precipitation' : 'probabilityOfPrecipitation', 
+                'temperature' : 'temperature', 
+                'dewpoint' : 'dewpoint', 
+                'humidity' : 'relativeHumidity', 
+                'wind_speed' : 'windSpeed', 
+                'wind_direction' : 'windDirection'}
+
 class User:
     def __init__(self):
         self.lat = None
         self.lng = None
+        self.notifications = dict()
 
     def add_location(self, street=None, region=None, country=None, zip=None):
         self.street = None #TODO: make this work
@@ -51,6 +66,9 @@ class User:
         
     def get_forecast(self):
         self.forecast = requests.get(self.gridpoint['properties']['forecast']).json()
+
+    def add_notification(self, type, value):
+        self.notifications[type] = value
     
     def print_info(self):
         # pp.pprint(self.gridpoint['properties']['forecast'])
@@ -58,10 +76,16 @@ class User:
         print("test")
 
     def check_occurrence(self):
+        # for key in self.notifications.keys():
+        #     print(weather_keys[key])
         for period in self.forecast['properties']['periods']:
-            print(period['name'])
-            print(period['temperature'])
-            print(period['probabilityOfPrecipitation']['value'])
+            for notifcation in self.notifications.keys():
+                if weather_keys[notifcation] in period.keys():
+                    if int(period[weather_keys[notifcation]]['value'] or 0) >= self.notifications[notifcation]:
+                        print(period[weather_keys[notifcation]]['value'])
+        #     print(period['name'])
+        #     print(period['temperature'])
+        #     print(period['probabilityOfPrecipitation']['value'])
 
 def main():
     # forcast_out = requests.get("http://dev.virtualearth.net/REST/v1/Locations?&postalCode={92109}&key={}")
@@ -75,7 +99,8 @@ def main():
     test_user.get_coords(api_key=location_api_key)
     test_user.get_gridpoint_url()
     test_user.get_forecast()
-    test_user.print_info()
+    # test_user.print_info()
+    test_user.add_notification(type="precipitation", value=20)
     test_user.check_occurrence()
     print("+++++++++++")
     print("located")
