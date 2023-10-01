@@ -15,6 +15,19 @@ location_api_key = config.location_api_key
 #                 'windSpeed' : 'wind_speed', 
 #                 'windDirection' : 'wind_direction'}
 
+weather_keys_2 = {'precipitation' : ('probabilityOfPrecipitation', 'value'), 
+                'temperature' : ('temperature', None), 
+                'dewpoint' : ('dewpoint', 'value'), 
+                'humidity' : ('relativeHumidity', 'value'), 
+                'wind_speed' : ('windSpeed', None), 
+                'wind_direction' : ('windDirection', None)}
+
+def get_key_value(weather_type, period_dict, weather_keys):
+    if weather_keys[weather_type][1] == None:
+        return(period_dict[weather_keys[weather_type][0]])
+    if weather_keys[weather_type][1] == 'value':
+        return(period_dict[weather_keys[weather_type][0]][weather_keys[weather_type][1]])
+
 weather_keys = {'precipitation' : 'probabilityOfPrecipitation', 
                 'temperature' : 'temperature', 
                 'dewpoint' : 'dewpoint', 
@@ -27,6 +40,7 @@ class User:
         self.lat = None
         self.lng = None
         self.notifications = dict()
+
 
     def add_location(self, street=None, region=None, country=None, zip=None):
         self.street = None #TODO: make this work
@@ -67,8 +81,14 @@ class User:
     def get_forecast(self):
         self.forecast = requests.get(self.gridpoint['properties']['forecast']).json()
 
-    def add_notification(self, type, value, lead_time):
-        self.notifications[type] = value
+    def add_notification(self, type, value, relationship, lead_time):
+        for lead in lead_time:
+            if lead in self.notifications.keys():
+                self.notifications[lead].append({'weather_type' : type,
+                                                'weather_value' : value})
+            if lead not in self.notifications.keys():
+                self.notifications[lead] = [{'weather_type' : type,
+                                            'weather_value' : value}]
     
     def print_info(self):
         # pp.pprint(self.gridpoint['properties']['forecast'])
@@ -76,17 +96,18 @@ class User:
         print("test")
 
     def check_occurrence(self):
-        # for key in self.notifications.keys():
-        #     print(weather_keys[key])
         for period in self.forecast['properties']['periods']:
-            for notifcation in self.notifications.keys():
-                if weather_keys[notifcation] in period.keys():
-                    if int(period[weather_keys[notifcation]]['value'] or 0) >= self.notifications[notifcation]:
-                        print(period[weather_keys[notifcation]]['value'])
-        #     print(period['name'])
-        #     print(period['temperature'])
-        #     print(period['probabilityOfPrecipitation']['value'])
-
+            if period['number'] in self.notifications.keys():
+                print(period['number'])
+                for threshold in self.notifications[period['number']]:
+                    predicted_value = get_key_value(weather_type=threshold['weather_type'], 
+                                                    period_dict=period, 
+                                                    weather_keys=weather_keys_2)
+                    print(threshold['weather_type'])
+                    print(threshold['weather_value'])
+                    print(predicted_value)
+                    print("++++++")
+    
 def main():
     # forcast_out = requests.get("http://dev.virtualearth.net/REST/v1/Locations?&postalCode={92109}&key={}")
     # test = requests.get("http://dev.virtualearth.net/REST/v1/Locations/US/WA/98052/Redmond/1%20Microsoft%20Way?&key=").json()
@@ -100,7 +121,8 @@ def main():
     test_user.get_gridpoint_url()
     test_user.get_forecast()
     # test_user.print_info()
-    test_user.add_notification(type="precipitation", value=20, lead_time=[3,2,1,0])
+    test_user.add_notification(type="precipitation", value=20, relationship='>', lead_time=[3,2])
+    test_user.add_notification(type="precipitation", value=40, relationship='<', lead_time=[4,3])
     test_user.check_occurrence()
     print("+++++++++++")
     print("located")
