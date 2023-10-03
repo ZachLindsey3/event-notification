@@ -82,13 +82,21 @@ class User:
     #     self.forecast = requests.get(self.gridpoint['properties']['forecast']).json()
 
     def add_notification(self, type, value, relationship, lead_time):
-        for lead in lead_time:
+        #Add single notiifcation to a user
+        #Stores notifications by lead time to notification request
+        for lead in lead_time: 
             if lead in self.notifications.keys():
-                self.notifications[lead].append({'weather_type' : type,
-                                                'weather_value' : value})
-            if lead not in self.notifications.keys():
+                self.notifications[lead].append({'weather_type' : type, #type of weather event, string (eg, 'precipitation')
+                                                'weather_value' : value, #probability of weather event, int
+                                                'relationship' : relationship, #equality relationship, string (eg, '>')
+                                                'lead_time' : lead_time}) #time to prediction that notification is needed, list of ints
+                
+            #this does the same as above, adds lead to dict if not already there
+            if lead not in self.notifications.keys(): 
                 self.notifications[lead] = [{'weather_type' : type,
-                                            'weather_value' : value}]
+                                            'weather_value' : value,
+                                            'relationship' : relationship,
+                                            'lead_time' : lead_time}]
     
     def print_info(self):
         # pp.pprint(self.gridpoint['properties']['forecast'])
@@ -125,9 +133,12 @@ class Notifier:
                     predicted_value = get_key_value(weather_type=threshold['weather_type'], 
                                                     period_dict=period, 
                                                     weather_keys=weather_keys_2)
-                    print(threshold['weather_type'])
-                    print(threshold['weather_value'])
-                    print(predicted_value)
+                    #Add values to strings, evaluate using eval() to bool if the relationship is met or not
+                    predicted_value_int = predicted_value or 0
+                    value_relationship = threshold['relationship']
+                    value_threshold = threshold['weather_value']
+                    send_notification = eval(f'{predicted_value_int} {value_relationship} {value_threshold}')
+                    print(send_notification)
                     print("++++++")
 
     
@@ -150,6 +161,8 @@ def main():
     # test_user.check_occurrence()
     print("+++++++++++")
     print("located")
+    x=-10
+    print(eval(f'{x} > 0'))
 
 
 if __name__ == "__main__":
