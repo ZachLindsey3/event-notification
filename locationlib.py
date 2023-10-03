@@ -78,8 +78,8 @@ class User:
     def get_gridpoint_url(self):
         self.gridpoint = requests.get(f"https://api.weather.gov/points/{self.lat},{self.lng}").json()
         
-    def get_forecast(self):
-        self.forecast = requests.get(self.gridpoint['properties']['forecast']).json()
+    # def get_forecast(self):
+    #     self.forecast = requests.get(self.gridpoint['properties']['forecast']).json()
 
     def add_notification(self, type, value, relationship, lead_time):
         for lead in lead_time:
@@ -95,11 +95,33 @@ class User:
         pp.pprint(self.forecast)
         print("test")
 
-    def check_occurrence(self):
+    # def check_occurrence(self):
+    #     for period in self.forecast['properties']['periods']:
+    #         if period['number'] in self.notifications.keys():
+    #             print(period['number'])
+    #             for threshold in self.notifications[period['number']]:
+    #                 predicted_value = get_key_value(weather_type=threshold['weather_type'], 
+    #                                                 period_dict=period, 
+    #                                                 weather_keys=weather_keys_2)
+    #                 print(threshold['weather_type'])
+    #                 print(threshold['weather_value'])
+    #                 print(predicted_value)
+    #                 print("++++++")
+
+class Notifier:
+    def __init__(self):
+        self.init = True
+
+    def get_forecast(self): #does not work
+        self.forecast = requests.get(self.gridpoint['properties']['forecast']).json()
+
+    def check_occurrence(self, user):
+        self.forecast = requests.get(user.gridpoint['properties']['forecast']).json()
+
         for period in self.forecast['properties']['periods']:
-            if period['number'] in self.notifications.keys():
+            if period['number'] in user.notifications.keys():
                 print(period['number'])
-                for threshold in self.notifications[period['number']]:
+                for threshold in user.notifications[period['number']]:
                     predicted_value = get_key_value(weather_type=threshold['weather_type'], 
                                                     period_dict=period, 
                                                     weather_keys=weather_keys_2)
@@ -107,6 +129,7 @@ class User:
                     print(threshold['weather_value'])
                     print(predicted_value)
                     print("++++++")
+
     
 def main():
     # forcast_out = requests.get("http://dev.virtualearth.net/REST/v1/Locations?&postalCode={92109}&key={}")
@@ -119,11 +142,12 @@ def main():
     test_user.add_location(zip = "92101", country="US", region="CA")
     test_user.get_coords(api_key=location_api_key)
     test_user.get_gridpoint_url()
-    test_user.get_forecast()
-    # test_user.print_info()
     test_user.add_notification(type="precipitation", value=20, relationship='>', lead_time=[3,2])
     test_user.add_notification(type="precipitation", value=40, relationship='<', lead_time=[4,3])
-    test_user.check_occurrence()
+
+    test_notifier = Notifier()
+    test_notifier.check_occurrence(test_user)
+    # test_user.check_occurrence()
     print("+++++++++++")
     print("located")
 
